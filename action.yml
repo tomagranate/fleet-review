@@ -1,0 +1,41 @@
+name: Fleet review
+description: Two-pass cheap PR review on the Linux fleet via jbot slim.
+
+inputs:
+  opencode-api-key:
+    description: OpenCode Go API key
+    required: true
+  github-token:
+    description: Token used to read the PR and post the review
+    required: false
+    default: ${{ github.token }}
+  model:
+    description: OpenCode Go pool. deepseek-v4-flash is routed to V4.1 Flash.
+    required: false
+    default: opencode-go/deepseek-v4.1-flash,opencode-go/deepseek-v4-flash,opencode-go/glm-5.3-flash
+  pr-number:
+    description: Pull request number for workflow_dispatch
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+        ref: ${{ github.event.pull_request.head.sha || format('refs/pull/{0}/head', inputs.pr-number) }}
+
+    - uses: pgup-ai/jbot-review-action/slim@5cb5a054087cfe171579ec208f8b3824671246a7 # v0
+      with:
+        model: ${{ inputs.model }}
+        opencode-api-key: ${{ inputs.opencode-api-key }}
+        github-token: ${{ inputs.github-token }}
+        pr-number: ${{ github.event.pull_request.number || inputs.pr-number }}
+        review-passes: "2"
+        verify-findings: "true"
+        skip-doc-only: "true"
+        skip-unchanged: "true"
+        auto-approve: "false"
+        time-budget-minutes: "20"
