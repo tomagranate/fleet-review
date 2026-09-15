@@ -77,5 +77,9 @@ Set `OPENCODE_API_KEY` on the caller repo. Runners need the labels
 
 ## Release
 
-Pin jbot and checkout by SHA in `action.yml`. Tag the commit `v1.0.0`.
-Point the moving `v1` tag at that commit.
+The action drops leftover jbot containers and root-owned review files
+before it starts. Primer's github-runner unit does the same on start and
+stop.
+
+Pin jbot by SHA in `action.yml`. Tag the commit `v1.0.0`. Point the
+moving `v1` tag at that commit.

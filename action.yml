@@ -21,6 +21,12 @@ inputs:
 runs:
   using: composite
   steps:
+    # jbot writes as root in Docker. Cancelled jobs also leave containers
+    # that still hold _work. Drop both before this run opens GITHUB_OUTPUT.
+    - name: Drop leftover jbot files
+      shell: bash
+      run: bash "${GITHUB_ACTION_PATH}/cleanup.sh"
+
     - uses: pgup-ai/jbot-review-action/slim@5cb5a054087cfe171579ec208f8b3824671246a7 # v0
       with:
         model: ${{ inputs.model }}
