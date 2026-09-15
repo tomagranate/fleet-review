@@ -21,10 +21,13 @@ inputs:
 runs:
   using: composite
   steps:
+    # jbot writes .jbot-review as root in Docker. Default git clean cannot
+    # remove those files and then checkout deletes .git.
     - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       with:
         fetch-depth: 0
         persist-credentials: false
+        clean: false
         ref: ${{ github.event.pull_request.head.sha || format('refs/pull/{0}/head', inputs.pr-number) }}
 
     - uses: pgup-ai/jbot-review-action/slim@5cb5a054087cfe171579ec208f8b3824671246a7 # v0
