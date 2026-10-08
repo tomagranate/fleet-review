@@ -1,5 +1,5 @@
 name: Fleet review
-description: Two-pass cheap PR review on the Linux fleet via jbot slim.
+description: Cheap one-pass PR review on the Linux fleet via jbot slim.
 
 inputs:
   opencode-api-key:
@@ -33,7 +33,7 @@ runs:
         opencode-api-key: ${{ inputs.opencode-api-key }}
         github-token: ${{ inputs.github-token }}
         pr-number: ${{ github.event.pull_request.number || inputs.pr-number }}
-        review-passes: "2"
+        review-passes: "1"
         verify-findings: "true"
         skip-doc-only: "true"
         skip-unchanged: "true"

@@ -11,7 +11,7 @@ keep `uses: tomagranate/fleet-review@v1`.
 
 - Pool: `opencode-go/deepseek-v4.1-flash`, `opencode-go/deepseek-v4-flash`,
   `opencode-go/glm-5.3-flash`
-- Two review passes, then verify findings
+- One review pass, then verify findings (two passes cost about twice as much)
 - Skip docs-only and unchanged patches
 - No auto-approve
 - 20 minute model budget
