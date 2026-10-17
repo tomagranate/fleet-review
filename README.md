@@ -9,9 +9,9 @@ keep `uses: tomagranate/fleet-review@v1`.
 
 ## Defaults
 
-- Pool: `opencode-go/deepseek-v4.1-flash`, `opencode-go/deepseek-v4-flash`,
-  `opencode-go/glm-5.3-flash`
-- One review pass, then verify findings (two passes cost about twice as much)
+- Model: `opencode/deepseek-v4.1-flash-free` (free on OpenCode Zen)
+- Two review passes, then verify findings
+- At most two model sessions at once (free tiers throttle)
 - Skip docs-only and unchanged patches
 - No auto-approve
 - 20 minute model budget
@@ -36,9 +36,9 @@ on:
         description: Pull request number to review
         required: true
       model:
-        description: Model pool override
+        description: Model pool override (empty uses the action default)
         required: false
-        default: opencode-go/deepseek-v4.1-flash,opencode-go/deepseek-v4-flash,opencode-go/glm-5.3-flash
+        default: ""
 
 concurrency:
   group: fleet-review-${{ github.event.pull_request.number || inputs.pr-number }}
@@ -68,7 +68,7 @@ jobs:
       - uses: tomagranate/fleet-review@v1
         with:
           opencode-api-key: ${{ secrets.OPENCODE_API_KEY }}
-          model: ${{ inputs.model || 'opencode-go/deepseek-v4.1-flash,opencode-go/deepseek-v4-flash,opencode-go/glm-5.3-flash' }}
+          model: ${{ inputs.model }}
           pr-number: ${{ inputs.pr-number || '' }}
 ```
 
