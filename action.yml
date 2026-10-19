@@ -17,6 +17,14 @@ inputs:
     description: Pull request number for workflow_dispatch
     required: false
     default: ""
+  free-time-budget-minutes:
+    description: Model time budget for the first attempt. Increase the caller job timeout to cover both attempts.
+    required: false
+    default: "12"
+  fallback-time-budget-minutes:
+    description: Model time budget for the paid fallback. Increase the caller job timeout to cover both attempts.
+    required: false
+    default: "15"
 
 runs:
   using: composite
@@ -41,7 +49,7 @@ runs:
         skip-doc-only: "true"
         skip-unchanged: "true"
         auto-approve: "false"
-        time-budget-minutes: "12"
+        time-budget-minutes: ${{ inputs.free-time-budget-minutes }}
         # Free tiers throttle concurrent sessions on one key.
         max-concurrent-sessions: "2"
 
@@ -63,4 +71,4 @@ runs:
         skip-doc-only: "true"
         skip-unchanged: "true"
         auto-approve: "false"
-        time-budget-minutes: "15"
+        time-budget-minutes: ${{ inputs.fallback-time-budget-minutes }}
