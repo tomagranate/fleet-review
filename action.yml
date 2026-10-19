@@ -1,5 +1,5 @@
 name: Fleet review
-description: Free two-pass PR review on the Linux fleet via jbot slim.
+description: PR review on the Linux fleet via jbot slim. Free first, OpenCode Go on failure.
 
 inputs:
   opencode-api-key:
@@ -10,7 +10,7 @@ inputs:
     required: false
     default: ${{ github.token }}
   model:
-    description: Model or comma-separated pool. Empty uses free DeepSeek v4.1 Flash on OpenCode Zen.
+    description: Model or comma-separated pool. Empty uses free DeepSeek v4.1 Flash on OpenCode Zen. Applies to the first attempt only.
     required: false
     default: ""
   pr-number:
@@ -27,7 +27,10 @@ runs:
       shell: bash
       run: bash "${GITHUB_ACTION_PATH}/cleanup.sh"
 
-    - uses: pgup-ai/jbot-review-action/slim@5cb5a054087cfe171579ec208f8b3824671246a7 # v0
+    # Free tiers hit rate limits. Fail open here and retry on OpenCode Go.
+    - id: free
+      uses: pgup-ai/jbot-review-action/slim@5cb5a054087cfe171579ec208f8b3824671246a7 # v0
+      continue-on-error: true
       with:
         model: ${{ inputs.model || 'opencode/deepseek-v4.1-flash-free' }}
         opencode-api-key: ${{ inputs.opencode-api-key }}
@@ -38,6 +41,26 @@ runs:
         skip-doc-only: "true"
         skip-unchanged: "true"
         auto-approve: "false"
-        time-budget-minutes: "20"
+        time-budget-minutes: "12"
         # Free tiers throttle concurrent sessions on one key.
         max-concurrent-sessions: "2"
+
+    - name: Drop jbot files from the free attempt
+      if: steps.free.outcome == 'failure'
+      shell: bash
+      run: bash "${GITHUB_ACTION_PATH}/cleanup.sh"
+
+    # Paid fallback. One pass keeps the cost down.
+    - if: steps.free.outcome == 'failure'
+      uses: pgup-ai/jbot-review-action/slim@5cb5a054087cfe171579ec208f8b3824671246a7 # v0
+      with:
+        model: opencode-go/deepseek-v4.1-flash
+        opencode-api-key: ${{ inputs.opencode-api-key }}
+        github-token: ${{ inputs.github-token }}
+        pr-number: ${{ github.event.pull_request.number || inputs.pr-number }}
+        review-passes: "1"
+        verify-findings: "true"
+        skip-doc-only: "true"
+        skip-unchanged: "true"
+        auto-approve: "false"
+        time-budget-minutes: "15"
