@@ -22,6 +22,24 @@ keep `uses: tomagranate/fleet-review@v1`.
 `runs-on` and the draft/fork skip stay in each caller. A composite action
 cannot set those job fields.
 
+Large patches can need more time to finish every review task. Set
+`free-time-budget-minutes` or `fallback-time-budget-minutes` on the action to
+override either budget. Set the caller's job timeout above their sum, with room
+for setup and cleanup. For example, a 12-minute first attempt and a 45-minute
+fallback fit within a 70-minute job:
+
+```yaml
+jobs:
+  review:
+    timeout-minutes: 70
+    # Keep the runner, checkout, permissions, and other settings shown below.
+    steps:
+      - uses: tomagranate/fleet-review@v1
+        with:
+          opencode-api-key: ${{ secrets.OPENCODE_API_KEY }}
+          fallback-time-budget-minutes: "45"
+```
+
 ## Caller workflow
 
 Each repo keeps a short workflow. Put it at
