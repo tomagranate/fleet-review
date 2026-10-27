@@ -12,6 +12,7 @@ keep `uses: tomagranate/fleet-review@v1`.
 - Model: `opencode-go/deepseek-v4.1-flash` (paid on OpenCode Go)
 - One review pass, then verify findings
 - Auto shards: jbot splits large diffs into up to four parallel shards
+- At most four model sessions at once, one for each shard
 - Skip docs-only and unchanged patches
 - No auto-approve
 - 16 minute model budget, so each main review session gets about 10 minutes

@@ -43,6 +43,8 @@ runs:
         pr-number: ${{ github.event.pull_request.number || inputs.pr-number }}
         review-passes: "1"
         review-shards: "0"
+        # One session per shard. A queued shard can run past the budget.
+        max-concurrent-sessions: "4"
         verify-findings: "true"
         skip-doc-only: "true"
         skip-unchanged: "true"
