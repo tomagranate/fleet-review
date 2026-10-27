@@ -1,5 +1,5 @@
 name: Fleet review
-description: PR review on the Linux fleet via jbot slim. Free first, OpenCode Go on failure.
+description: PR review on the Linux fleet via jbot slim on OpenCode Go.
 
 inputs:
   opencode-api-key:
@@ -10,21 +10,19 @@ inputs:
     required: false
     default: ${{ github.token }}
   model:
-    description: Model or comma-separated pool. Empty uses free DeepSeek v4.1 Flash on OpenCode Zen. Applies to the first attempt only.
+    description: Model or comma-separated pool. Empty uses DeepSeek v4.1 Flash on OpenCode Go.
     required: false
     default: ""
   pr-number:
     description: Pull request number for workflow_dispatch
     required: false
     default: ""
-  free-time-budget-minutes:
-    description: Model time budget for the first attempt. Increase the caller job timeout to cover both attempts.
+  time-budget-minutes:
+    description: Model time budget. jbot derives each session's timeout from it. Keep the caller job timeout above it.
     required: false
-    default: "12"
-  fallback-time-budget-minutes:
-    description: Model time budget for the paid fallback. Increase the caller job timeout to cover both attempts.
-    required: false
-    default: "15"
+    # jbot gives each finder session this budget less about 5.5 minutes.
+    # 16 gives each main review shard about 10 minutes.
+    default: "16"
 
 runs:
   using: composite
@@ -35,40 +33,18 @@ runs:
       shell: bash
       run: bash "${GITHUB_ACTION_PATH}/cleanup.sh"
 
-    # Free tiers hit rate limits. Fail open here and retry on OpenCode Go.
-    - id: free
-      uses: pgup-ai/jbot-review-action/slim@5cb5a054087cfe171579ec208f8b3824671246a7 # v0
-      continue-on-error: true
+    # One pass keeps the cost down. Auto shards split large diffs (up to
+    # four shards) so each session finishes inside its timeout.
+    - uses: pgup-ai/jbot-review-action/slim@5cb5a054087cfe171579ec208f8b3824671246a7 # v0
       with:
-        model: ${{ inputs.model || 'opencode/deepseek-v4.1-flash-free' }}
-        opencode-api-key: ${{ inputs.opencode-api-key }}
-        github-token: ${{ inputs.github-token }}
-        pr-number: ${{ github.event.pull_request.number || inputs.pr-number }}
-        review-passes: "2"
-        verify-findings: "true"
-        skip-doc-only: "true"
-        skip-unchanged: "true"
-        auto-approve: "false"
-        time-budget-minutes: ${{ inputs.free-time-budget-minutes }}
-        # Free tiers throttle concurrent sessions on one key.
-        max-concurrent-sessions: "2"
-
-    - name: Drop jbot files from the free attempt
-      if: steps.free.outcome == 'failure'
-      shell: bash
-      run: bash "${GITHUB_ACTION_PATH}/cleanup.sh"
-
-    # Paid fallback. One pass keeps the cost down.
-    - if: steps.free.outcome == 'failure'
-      uses: pgup-ai/jbot-review-action/slim@5cb5a054087cfe171579ec208f8b3824671246a7 # v0
-      with:
-        model: opencode-go/deepseek-v4.1-flash
+        model: ${{ inputs.model || 'opencode-go/deepseek-v4.1-flash' }}
         opencode-api-key: ${{ inputs.opencode-api-key }}
         github-token: ${{ inputs.github-token }}
         pr-number: ${{ github.event.pull_request.number || inputs.pr-number }}
         review-passes: "1"
+        review-shards: "0"
         verify-findings: "true"
         skip-doc-only: "true"
         skip-unchanged: "true"
         auto-approve: "false"
-        time-budget-minutes: ${{ inputs.fallback-time-budget-minutes }}
+        time-budget-minutes: ${{ inputs.time-budget-minutes }}

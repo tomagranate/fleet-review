@@ -9,24 +9,24 @@ keep `uses: tomagranate/fleet-review@v1`.
 
 ## Defaults
 
-- Model: `opencode/deepseek-v4.1-flash-free` (free on OpenCode Zen)
-- Two review passes, then verify findings
-- At most two model sessions at once (free tiers throttle)
-- If the free run fails (for example, on rate limits), run again once on
-  `opencode-go/deepseek-v4.1-flash` with one review pass. This one costs money.
+- Model: `opencode-go/deepseek-v4.1-flash` (paid on OpenCode Go)
+- One review pass, then verify findings
+- Auto shards: jbot splits large diffs into up to four parallel shards
 - Skip docs-only and unchanged patches
 - No auto-approve
-- 12 minute model budget on the free run, 15 on the paid run, so both fit
-  in a 30 minute job
+- 16 minute model budget, so each main review session gets about 10 minutes
+  and the run fits in a 30 minute job
+
+The free OpenCode Zen tier is not used. On large PRs it ran out of time on
+every run, and the paid run had to start again after it.
 
 `runs-on` and the draft/fork skip stay in each caller. A composite action
 cannot set those job fields.
 
 Large patches can need more time to finish every review task. Set
-`free-time-budget-minutes` or `fallback-time-budget-minutes` on the action to
-override either budget. Set the caller's job timeout above their sum, with room
-for setup and cleanup. For example, a 12-minute first attempt and a 45-minute
-fallback fit within a 70-minute job:
+`time-budget-minutes` on the action to raise the budget. Set the caller's job
+timeout above it, with room for setup and cleanup. For example, a 45-minute
+budget fits within a 70-minute job:
 
 ```yaml
 jobs:
@@ -37,7 +37,7 @@ jobs:
       - uses: tomagranate/fleet-review@v1
         with:
           opencode-api-key: ${{ secrets.OPENCODE_API_KEY }}
-          fallback-time-budget-minutes: "45"
+          time-budget-minutes: "45"
 ```
 
 ## Caller workflow
